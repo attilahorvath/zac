@@ -3,6 +3,8 @@
 import Renderer from './renderer';
 import Body from './body';
 
+const timestep = 10;
+
 class Simulation {
   constructor() {
     this.renderer = new Renderer();
@@ -12,6 +14,7 @@ class Simulation {
 
   run() {
     this.lastTime = 0;
+    this.timeAccumulator = 0;
 
     requestAnimationFrame(timestamp => this.loop(timestamp));
   }
@@ -22,11 +25,17 @@ class Simulation {
     let deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
-    this.body.integrate(deltaTime);
+    this.timeAccumulator += deltaTime;
+
+    while (this.timeAccumulator >= timestep) {
+      this.body.integrate(timestep);
+
+      this.timeAccumulator -= timestep;
+    }
 
     this.renderer.clear();
 
-    this.body.draw();
+    this.body.draw(this.timeAccumulator / timestep);
   }
 }
 

@@ -33,6 +33,7 @@ class Entity {
     this.indexBuffer = new IndexBuffer(this.renderer, indices);
 
     this.state = new State(vec2.fromValues(100, 100), vec2.fromValues(0, 0));
+    this.previousState = new State(vec2.clone(this.state.position), vec2.clone(this.state.velocity));
 
     this.transformation = mat4.fromTranslation(mat4.create(), vec3.fromValues(this.state.position[0], this.state.position[1], 0));
   }
@@ -52,6 +53,9 @@ class Entity {
   }
 
   integrate(deltaTime) {
+    this.previousState.position = vec2.clone(this.state.position);
+    this.previousState.velocity = vec2.clone(this.state.velocity);
+
     let a = this.evaulate(new State(), 0);
     let b = this.evaulate(a, deltaTime * 0.5);
     let c = this.evaulate(b, deltaTime * 0.5);
@@ -62,8 +66,6 @@ class Entity {
 
     this.state.position = vec2.scaleAndAdd(vec2.create(), this.state.position, positionDerivative, deltaTime);
     this.state.velocity = vec2.scaleAndAdd(vec2.create(), this.state.velocity, velocityDerivative, deltaTime);
-
-    this.transformation = mat4.fromTranslation(mat4.create(), vec3.fromValues(this.state.position[0], this.state.position[1], 0));
   }
 
   calculateVelocity(state) {
@@ -81,7 +83,11 @@ class Entity {
     // return vec2.scale(vec2.create(), n, r * 0.00000001);
   }
 
-  draw() {
+  draw(alpha) {
+    let position = vec2.lerp(vec2.create(), this.previousState.position, this.state.position, alpha);
+
+    this.transformation = mat4.fromTranslation(mat4.create(), vec3.fromValues(position[0], position[1], 0));
+
     this.renderer.draw(this.shader, this.vertexBuffer, this.indexBuffer, this.transformation);
   }
 }
